@@ -1,0 +1,5 @@
+<<<<<<< HEAD
+{"flutter":{"platforms":{"android":{"default":{"projectId":"volunteerconnect-5459a","appId":"1:12147009257:android:9e8500fa64f10775bef278","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"volunteerconnect-5459a","configurations":{"android":"1:12147009257:android:9e8500fa64f10775bef278","ios":"1:12147009257:ios:4d02e4306e8d0dcdbef278","macos":"1:12147009257:ios:4d02e4306e8d0dcdbef278","web":"1:12147009257:web:6a226bad307006e3bef278","windows":"1:12147009257:web:04b8c1e6289bb681bef278"}}}}}}
+=======
+{"flutter":{"platforms":{"android":{"default":{"projectId":"volunteerconnect-5459a","appId":"1:12147009257:android:9e8500fa64f10775bef278","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"volunteerconnect-5459a","configurations":{"android":"1:12147009257:android:9e8500fa64f10775bef278","ios":"1:12147009257:ios:4d02e4306e8d0dcdbef278","web":"1:12147009257:web:6a226bad307006e3bef278"}}}}}}
+>>>>>>> 3c39c8410d135e87e045fc0ecac0fe6ec7317773
