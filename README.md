@@ -1,6 +1,6 @@
 # VolunteerConnect 🤝
 
-VolunteerConnect is a mobile application built with Flutter and Firebase, designed to bridge the gap between non-profit organizations and volunteers. The platform provides two distinct user roles, each with a tailored experience.
+VolunteerConnect is a mobile application built with Flutter and Firebase, designed to bridge the gap between non-profit organizations and volunteers. The platform provides two distinct user roles (Volunteer and Organization), each with a tailored experience.
 
 ---
 
@@ -24,10 +24,14 @@ VolunteerConnect is a mobile application built with Flutter and Firebase, design
 
 * **Framework:** Flutter
 * **Backend:** Firebase
-* **Authentication:** Firebase Auth (Email/Password, Role-based)
-* **Database:** Cloud Firestore
-* **Storage:** Firebase Storage (for profile pictures and event images)
-* **Image Picking:** `image_picker`
+    * **Authentication:** Firebase Auth (Email/Password, Role-based)
+    * **Database:** Cloud Firestore
+    * **Storage:** Firebase Storage (for profile pictures and event images)
+* **Key Packages:**
+    * `cloud_firestore`
+    * `firebase_auth`
+    * `firebase_storage`
+    * `image_picker`
 
 ---
 
@@ -36,24 +40,28 @@ VolunteerConnect is a mobile application built with Flutter and Firebase, design
 **1. Clone the repository:**
 ```bash
 git clone [https://github.com/YourUsername/YourRepoName.git](https://github.com/YourUsername/YourRepoName.git)
-cd YourRepoName```
+cd YourRepoName
+````
 
 **2. Install dependencies:**
 
 ```bash
-flutter pub get```
+flutter pub get
+```
 
 **3. Set up Firebase:**
 
-Create a new project on the Firebase Console.
-
-Add an Android, iOS, and/or Web app to your Firebase project.
-
-Follow the setup instructions to add the firebase_options.dart file to your lib/ folder (the flutterfire configure command is the easiest way).
-
-In Firestore, create a users collection to store user data (like role, fullName, etc.).
+  * Create a new project on the [Firebase Console](https://console.firebase.google.com/).
+  * Add an Android, iOS, and/or Web app to your Firebase project.
+  * Follow the setup instructions to add the `firebase_options.dart` file to your `lib/` folder (using `flutterfire configure` is the easiest way).
+  * In **Firestore**, create a `users` collection to store user data (e.g., `fullName`, `email`, `role`).
+  * In **Firebase Storage**, enable the service to allow image uploads.
 
 **4. Run the app:**
 
 ```bash
-flutter run```
+flutter run
+```
+
+```
+```
