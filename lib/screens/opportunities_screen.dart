@@ -47,7 +47,13 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
   // WIDGET for the category filter chips
   Widget _buildCategoryFilters() {
     // ... (This widget is unchanged)
-    const categories = ['All', 'Environment', 'Education', 'Health', 'Community'];
+    const categories = [
+      'All',
+      'Environment',
+      'Education',
+      'Health',
+      'Community'
+    ];
     return SizedBox(
       height: 50,
       child: ListView.builder(
@@ -79,7 +85,7 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
       ),
     );
   }
-  
+
   // --- NEW: WIDGET for the search bar ---
   Widget _buildSearchBar() {
     return Padding(
@@ -112,7 +118,6 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
       ),
     );
   }
-
 
   // WIDGET for a list item
   Widget _buildOpportunityListItem(VolunteerOpportunity event) {
@@ -236,12 +241,31 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
         slivers: [
           SliverAppBar(
             pinned: true,
-            expandedHeight: 190.0, 
+            expandedHeight: 190.0,
             actions: [
               IconButton(
                 icon: const Icon(Icons.logout),
                 tooltip: 'Sign Out',
-                onPressed: () => AuthService().signOut(),
+                onPressed: () async {
+                  // 1. Show a loading dialog
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                  );
+
+                  // 2. Call the sign-out method
+                  await AuthService().signOut();
+
+                  // 3. Pop the dialog
+                  // We check 'mounted' in case the widget was removed
+                  if (context.mounted) {
+                    Navigator.of(context, rootNavigator: true).pop();
+                  }
+                  // The AuthGate will handle navigating to the LandingScreen
+                },
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -249,7 +273,7 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/opportunities_header.jpg',
+                    'assets/images/header_background.jpg',
                     fit: BoxFit.cover,
                   ),
                   Container(
@@ -294,7 +318,7 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
               ),
             ),
           ),
-          
+
           // --- NEW: Add the search bar below the app bar ---
           SliverToBoxAdapter(
             child: Column(
@@ -323,16 +347,18 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
               }
 
               final allOpportunities = snapshot.data!;
-              
+
               // --- UPDATED: Apply both category and search filters ---
               final filteredOpportunities = allOpportunities.where((event) {
                 // Category filter logic
                 final matchesCategory = _selectedCategory == 'All' ||
                     event.category == _selectedCategory;
-                
+
                 // Search filter logic
                 final matchesSearch = _searchQuery.isEmpty ||
-                    event.name.toLowerCase().contains(_searchQuery.toLowerCase());
+                    event.name
+                        .toLowerCase()
+                        .contains(_searchQuery.toLowerCase());
 
                 return matchesCategory && matchesSearch;
               }).toList();

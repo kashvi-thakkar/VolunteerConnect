@@ -1,8 +1,9 @@
 // lib/screens/main_screen.dart
 import 'package:flutter/material.dart';
-import 'manage_events_screen.dart'; // We'll create a placeholder for this
-import 'dashboard_screen.dart';
-import 'profile_screen.dart';
+import 'package:volunteer_connect/screens/org_manage_events_screen.dart';
+import 'org_manage_events_screen.dart'; // This import will now work
+import 'org_dashboard_screen.dart'; // Make sure this file exists
+import 'profile_screen.dart';     // Make sure this file exists
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -15,8 +16,8 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 1; // Start on Dashboard
 
   static const List<Widget> _widgetOptions = <Widget>[
-    ManageEventsScreen(), // Placeholder
-    DashboardScreen(),
+    OrgManageEventsScreen(),
+    OrgDashboardScreen(), // Changed to OrgDashboardScreen
     ProfileScreen(),
   ];
 
@@ -51,24 +52,6 @@ class _MainScreenState extends State<MainScreen> {
         selectedItemColor: Colors.green.shade800,
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
-      ),
-    );
-  }
-}
-
-// --- Create this placeholder file ---
-// lib/screens/manage_events_screen.dart
-import 'package:flutter/material.dart';
-
-class ManageEventsScreen extends StatelessWidget {
-  const ManageEventsScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Manage Events')),
-      body: const Center(
-        child: Text('Manage Events Screen - Coming Soon!'),
       ),
     );
   }

@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:volunteer_connect/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:volunteer_connect/services/auth_service.dart';
+import 'package:volunteer_connect/main.dart'; // Volunteer MainScreen
+import 'package:volunteer_connect/screens/org_main_screen.dart' as org_main;
 
 class RegistrationScreen extends StatefulWidget {
-  final String role; // Accepts the role ('volunteer' or 'organization')
-
-  const RegistrationScreen({
-    super.key,
-    required this.role,
-  });
+  // We assume the role is passed from the previous screen
+  final String userRole;
+  const RegistrationScreen({super.key, required this.userRole});
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -19,7 +18,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _authService = AuthService();
 
-  final _nameController = TextEditingController();
+  // --- 1. ADDED a controller for Full Name ---
+  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -28,7 +28,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _fullNameController.dispose(); // --- Don't forget to dispose it ---
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -40,32 +40,34 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // --- 2. UPDATED the signUp call ---
       final User? user = await _authService.signUp(
         email: _emailController.text,
         password: _passwordController.text,
-        fullName: _nameController.text,
-        role: widget.role, // Pass the role to the service
+        fullName: _fullNameController.text, // <-- Added the missing parameter
+        role: widget.userRole,
       );
 
       if (user != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful! Please log in.'),
-            backgroundColor: Colors.green,
+        // Navigate to the correct dashboard and clear all previous screens
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => widget.userRole == 'volunteer'
+                ? const MainScreen() // Go to Volunteer Main Screen
+                : const org_main.MainScreen(), // Go to Org Main Screen
           ),
+          (route) => false, // This predicate removes all routes from the stack
         );
-        // Go back to the first screen (LandingScreen)
-        Navigator.of(context).popUntil((route) => route.isFirst);
       } else if (mounted) {
+        // Handle registration failure
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration failed. The email might be in use.'),
+            content: Text('Registration failed. This email may already be in use.'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
-      // Ensure loading state is turned off even if errors occur
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -74,18 +76,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine dynamic texts based on the role
-    final bool isVolunteer = widget.role == 'volunteer';
-    final String titleText =
-        'Create ${isVolunteer ? 'Volunteer' : 'Organization'} Account';
-    final String subtitleText = 'Let\'s get your ${widget.role} profile set up!';
-    final String nameLabel = isVolunteer ? 'Full Name' : 'Organization Name';
-    final IconData nameIcon =
-        isVolunteer ? Icons.person_outline : Icons.business;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(titleText),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
@@ -98,31 +90,40 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Image.asset('assets/images/logo.png', height: 100, fit: BoxFit.contain),
+                const SizedBox(height: 24),
                 Text(
-                  subtitleText,
+                  'Create Your Account',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.lato(
-                    fontSize: 16,
-                    color: Colors.grey[600],
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
+                Text(
+                  'Registering as a ${widget.userRole}',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lato(fontSize: 16, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 48),
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
+                      // --- 3. ADDED the TextFormField for Full Name ---
                       TextFormField(
-                        controller: _nameController,
+                        controller: _fullNameController,
+                        keyboardType: TextInputType.name,
                         decoration: InputDecoration(
-                          labelText: nameLabel,
-                          prefixIcon: Icon(nameIcon),
+                          labelText: 'Full Name',
+                          prefixIcon: const Icon(Icons.person_outline),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your name';
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your full name';
                           }
                           return null;
                         },
@@ -195,27 +196,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             strokeWidth: 3,
                           ),
                         )
-                      : Text('Create Account',
-                          style: GoogleFonts.lato(fontSize: 18)),
+                      : Text('Sign Up', style: GoogleFonts.lato(fontSize: 18)),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Already have an account?"),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).popUntil((route) => route.isFirst);
-                      },
-                      child: Text(
-                        'Login',
-                        style: TextStyle(
-                            color: Colors.green[800],
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                )
               ],
             ),
           ),

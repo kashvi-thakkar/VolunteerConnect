@@ -38,7 +38,8 @@ class RoleSelectionScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          const RegistrationScreen(role: 'volunteer'),
+                          // --- THIS IS THE FIX ---
+                          const RegistrationScreen(userRole: 'volunteer'),
                     ),
                   );
                 },
@@ -54,7 +55,8 @@ class RoleSelectionScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          const RegistrationScreen(role: 'organization'),
+                          // --- THIS IS THE FIX ---
+                          const RegistrationScreen(userRole: 'organization'),
                     ),
                   );
                 },

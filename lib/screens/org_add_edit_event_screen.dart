@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:volunteer_connect/models/volunteer_opportunity.dart';
 
 class OrgAddEditEventScreen extends StatefulWidget {
-  final VolunteerOpportunity? event; // Pass event for editing, null for adding
+  final VolunteerOpportunity? event;
 
   const OrgAddEditEventScreen({super.key, this.event});
 
@@ -104,87 +104,87 @@ class _OrgAddEditEventScreenState extends State<OrgAddEditEventScreen> {
     }
   }
 
-  // --- Form Submission Logic ---
-  Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate() || _currentUser == null) {
-      return; // Validation failed or no user
-    }
-    if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a date and time.')));
-      return;
-    }
-    // Need an image if creating, optional if editing and one exists
-    if (_selectedImageFile == null && _existingImageUrl == null) {
-       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an image for the event.')));
-       return;
-    }
+Future<void> _submitForm() async {
+  if (!_formKey.currentState!.validate() || _currentUser == null) {
+    return;
+  }
+  if (_selectedDate == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a date and time.')));
+    return;
+  }
+  if (_selectedImageFile == null && _existingImageUrl == null) {
+     ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an image for the event.')));
+     return;
+  }
 
+  setState(() => _isLoading = true);
 
-    setState(() => _isLoading = true);
+  String? imageUrl = _existingImageUrl;
+  bool success = false;
 
-    String? imageUrl = _existingImageUrl; // Start with existing image URL
+  try {
+    if (_selectedImageFile != null) {
+      final String fileName =
+          'opportunity_images/${DateTime.now().millisecondsSinceEpoch}_${_selectedImageFile!.name}';
+      final Reference storageRef = _storage.ref().child(fileName);
 
-    try {
-      // --- 1. Upload Image (if a new one was selected) ---
-      if (_selectedImageFile != null) {
-        final String fileName =
-            'opportunity_images/${DateTime.now().millisecondsSinceEpoch}_${_selectedImageFile!.name}';
-        final Reference storageRef = _storage.ref().child(fileName);
-
-        if (kIsWeb) {
-          await storageRef.putData(await _selectedImageFile!.readAsBytes());
-        } else {
-          await storageRef.putFile(File(_selectedImageFile!.path));
-        }
-        imageUrl = await storageRef.getDownloadURL(); // Get the new URL
-      }
-
-      // --- 2. Prepare Data for Firestore ---
-      final eventData = {
-        'name': _nameController.text.trim(),
-        'location': _locationController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'category': _selectedCategory,
-        'date': Timestamp.fromDate(_selectedDate!),
-        'imageUrl': imageUrl,
-        'ownerId': _currentUser!.uid, // Link event to the organization
-      };
-
-      // --- 3. Save or Update Firestore Document ---
-      if (widget.event == null) {
-        // Add new document
-        await _firestore.collection('opportunities').add(eventData);
+      if (kIsWeb) {
+        await storageRef.putData(await _selectedImageFile!.readAsBytes());
       } else {
-        // Update existing document
-        await _firestore
-            .collection('opportunities')
-            .doc(widget.event!.id)
-            .update(eventData);
+        await storageRef.putFile(File(_selectedImageFile!.path));
       }
+      imageUrl = await storageRef.getDownloadURL();
+    }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+    if (imageUrl == null) {
+      throw Exception("Image URL could not be obtained.");
+    }
+
+    final eventData = {
+      'name': _nameController.text.trim(),
+      'location': _locationController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'category': _selectedCategory,
+      'date': Timestamp.fromDate(_selectedDate!),
+      'imageUrl': imageUrl,
+      'ownerId': _currentUser!.uid,
+    };
+
+    if (widget.event == null) {
+      await _firestore.collection('opportunities').add(eventData);
+    } else {
+      await _firestore
+          .collection('opportunities')
+          .doc(widget.event!.id)
+          .update(eventData);
+    }
+
+    success = true;
+
+  } catch (e) {
+    print('Error saving event: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving event: ${e.toString()}'), backgroundColor: Colors.red),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
+
+      if (success) {
+         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('Event ${widget.event == null ? 'added' : 'updated'} successfully!'),
               backgroundColor: Colors.green),
         );
-        Navigator.of(context).pop(); // Go back after saving
-      }
-    } catch (e) {
-      print('Error saving event: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving event: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+        Navigator.of(context).pop();
       }
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
