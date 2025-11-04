@@ -1,85 +1,64 @@
 # VolunteerConnect 🤝
 
-A dynamic Flutter application designed to connect local volunteers with community events and charity initiatives. This app is powered by a live **Firebase** backend, allowing users to register, browse live events, and sign up for opportunities in real-time.
+VolunteerConnect is a mobile application built with Flutter and Firebase, designed to bridge the gap between non-profit organizations and volunteers. The platform provides two distinct user roles (Volunteer and Organization), each with a tailored experience.
 
 ---
 
 ## ✨ Features
 
-This is a feature-complete V1 application with a full "user journey":
+### 🧑‍🤝‍🧑 For Volunteers
+* **🔍 Browse Opportunities:** Discover local and remote volunteering events.
+* **✅ Easy Sign-up:** Register for events with a single tap.
+* **📅 My Events:** Track all upcoming events you've registered for and cancel if needed.
+* **👤 Profile Management:** Update your personal information and profile picture.
 
-* **Firebase Backend:** Connects to a live **Firestore Database** to fetch and store all app data.
-* **User Authentication:** Full registration, login, and sign-out flow using **Firebase Authentication**.
-* **Live Event Browsing:** Fetches a real-time list of volunteer opportunities from Firestore, complete with images loaded from **Firebase Storage**.
-* **Event Filtering:** Users can filter the event list by category (e.g., "Environment", "Education").
-* **Event Sign-Up:** A logged-in user can register for an event, which creates a `registrations` record in the database.
-* **Personalized "My Events" Screen:** A dedicated screen that shows the user a list of only the events they have personally registered for.
-* **Dynamic Profile Screen:** A profile page that displays the user's name (fetched from their Firestore `users` document) and a sign-out button.
-* **Smart "How to Join" Screen:** A step-by-step guide that dynamically updates to show the "Sign Up" step as completed if the user is logged in.
+### 🏛️ For Organizations
+* **➕ Post Events:** Easily create, edit, and manage new volunteer opportunities.
+* **📊 Dashboard:** View key statistics, like total events created and total volunteer sign-ups.
+* **📋 View Volunteers:** See a list of all volunteers registered for each of your events.
+* **👤 Profile Management:** Manage your organization's public profile.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Framework:** Flutter
+* **Backend:** Firebase
+    * **Authentication:** Firebase Auth (Email/Password, Role-based)
+    * **Database:** Cloud Firestore
+    * **Storage:** Firebase Storage (for profile pictures and event images)
+* **Key Packages:**
+    * `cloud_firestore`
+    * `firebase_auth`
+    * `firebase_storage`
+    * `image_picker`
 
 ---
 
 ## 🚀 Getting Started
 
-This project is no longer static. To run it, you **must** connect it to your own Firebase project.
+**1. Clone the repository:**
+```bash
+git clone [https://github.com/YourUsername/YourRepoName.git](https://github.com/YourUsername/YourRepoName.git)
+cd YourRepoName
+````
 
-### 1. Firebase Project Setup
+**2. Install dependencies:**
 
-Before running the app, you need to set up the Firebase backend:
+```bash
+flutter pub get
+```
 
-1.  **Create a Firebase Project:** Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
-2.  **Enable Authentication:** Go to **Build > Authentication** > **Sign-in method** and enable the **Email/Password** provider.
-3.  **Enable Firestore:** Go to **Build > Firestore Database** and create a database. Start in **test mode** for now.
-    * Create a collection named `opportunities` and add a few documents (events) with fields like `name` (string), `location` (string), `description` (string), `category` (string), `date` (timestamp), and `imageUrl` (string).
-    * The `users` and `registrations` collections will be created automatically by the app.
-4.  **Enable Storage:** Go to **Build > Storage** and set it up. Upload your event images here and use their "Download URLs" for the `imageUrl` field in your Firestore documents.
+**3. Set up Firebase:**
 
-### 2. Local Installation
+  * Create a new project on the [Firebase Console](https://console.firebase.google.com/).
+  * Add an Android, iOS, and/or Web app to your Firebase project.
+  * Follow the setup instructions to add the `firebase_options.dart` file to your `lib/` folder (using `flutterfire configure` is the easiest way).
+  * In **Firestore**, create a `users` collection to store user data (e.g., `fullName`, `email`, `role`).
+  * In **Firebase Storage**, enable the service to allow image uploads.
 
-Once your Firebase project is ready:
+**4. Run the app:**
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/your-username/VolunteerConnect.git](https://github.com/Ved05Nara/VolunteerConnect.git)
-    ```
-2.  **Navigate to the project directory:**
-    ```bash
-    cd VolunteerConnect
-    ```
-3.  **Install dependencies:**
-    ```bash
-    flutter pub get
-    ```
-4.  **Connect to Firebase:** Use the FlutterFire CLI to connect your app to the Firebase project you just created.
-    ```bash
-    flutterfire configure
-    ```
-    This will generate the `lib/firebase_options.dart` file.
-
-5.  **Run the app:**
-    ```bash
-    flutter run
-    ```
-
----
-
-## 🛠️ Built With
-
-* **Flutter:** The UI toolkit for building natively compiled applications.
-* **Dart:** The programming language used by Flutter.
-* **Firebase:** The complete backend-as-a-service (BaaS) platform.
-    * **Firebase Authentication:** For user management.
-    * **Cloud Firestore:** As the real-time NoSQL database.
-    * **Firebase Storage:** For hosting event images.
-
----
-
-## 🔮 Future Improvements
-
-Now that the core V1 is complete, future enhancements could include:
-
-* **Un-register from Events:** Allow users to remove themselves from an event they've signed up for.
-* **Push Notifications:** Send users reminders for events they are registered for.
-* **User Profile Editing:** Allow users to update their name or upload a profile picture.
-* **Map View:** Show events on a map.
-* **Admin Panel:** Create a separate web app for organizations to post and manage their own events.
+```bash
+flutter run
+```
