@@ -113,11 +113,7 @@ Future<void> _submitForm() async {
         const SnackBar(content: Text('Please select a date and time.')));
     return;
   }
-  if (_selectedImageFile == null && _existingImageUrl == null) {
-     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an image for the event.')));
-     return;
-  }
+  
 
   setState(() => _isLoading = true);
 
@@ -138,9 +134,7 @@ Future<void> _submitForm() async {
       imageUrl = await storageRef.getDownloadURL();
     }
 
-    if (imageUrl == null) {
-      throw Exception("Image URL could not be obtained.");
-    }
+    
 
     final eventData = {
       'name': _nameController.text.trim(),
