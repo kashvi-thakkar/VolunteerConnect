@@ -1,7 +1,7 @@
 // lib/screens/main_screen.dart
 import 'package:flutter/material.dart';
 import 'package:volunteer_connect/screens/org_manage_events_screen.dart';
-import 'org_manage_events_screen.dart'; // This import will now work
+// This import will now work
 import 'org_dashboard_screen.dart'; // Make sure this file exists
 import 'profile_screen.dart';     // Make sure this file exists
 

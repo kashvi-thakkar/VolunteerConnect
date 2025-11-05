@@ -1,10 +1,6 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:volunteer_connect/models/volunteer_opportunity.dart';
 
@@ -20,18 +16,16 @@ class OrgAddEditEventScreen extends StatefulWidget {
 class _OrgAddEditEventScreenState extends State<OrgAddEditEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
-  // Controllers for form fields
+  // --- Controllers for form fields ---
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _descriptionController = TextEditingController();
-  DateTime? _selectedDate;
-  String _selectedCategory = 'Community'; // Default category
-  XFile? _selectedImageFile; // For the picked image file
-  String? _existingImageUrl; // To store URL if editing
+  final _imageUrlController = TextEditingController(); // For the URL
 
+  DateTime? _selectedDate;
+  String _selectedCategory = 'Community';
   bool _isLoading = false;
 
   final List<String> _categories = [
@@ -46,14 +40,13 @@ class _OrgAddEditEventScreenState extends State<OrgAddEditEventScreen> {
   @override
   void initState() {
     super.initState();
-    // If editing, populate fields with existing event data
     if (widget.event != null) {
       _nameController.text = widget.event!.name;
       _locationController.text = widget.event!.location;
       _descriptionController.text = widget.event!.description;
       _selectedDate = widget.event!.date;
       _selectedCategory = widget.event!.category;
-      _existingImageUrl = widget.event!.imageUrl;
+      _imageUrlController.text = widget.event!.imageUrl;
     }
   }
 
@@ -62,21 +55,10 @@ class _OrgAddEditEventScreenState extends State<OrgAddEditEventScreen> {
     _nameController.dispose();
     _locationController.dispose();
     _descriptionController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
-  // --- Image Picking Logic ---
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _selectedImageFile = image;
-      });
-    }
-  }
-
-  // --- Date Picking Logic ---
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -85,100 +67,83 @@ class _OrgAddEditEventScreenState extends State<OrgAddEditEventScreen> {
       lastDate: DateTime(2101),
     );
     if (picked != null && picked != _selectedDate) {
-      // Allow selecting time as well
-       final TimeOfDay? pickedTime = await showTimePicker(
-         context: context,
-         initialTime: TimeOfDay.fromDateTime(_selectedDate ?? DateTime.now()),
-       );
-       if (pickedTime != null) {
-         setState(() {
-           _selectedDate = DateTime(
-             picked.year,
-             picked.month,
-             picked.day,
-             pickedTime.hour,
-             pickedTime.minute,
-           );
-         });
-       }
-    }
-  }
-
-Future<void> _submitForm() async {
-  if (!_formKey.currentState!.validate() || _currentUser == null) {
-    return;
-  }
-  if (_selectedDate == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a date and time.')));
-    return;
-  }
-  
-
-  setState(() => _isLoading = true);
-
-  String? imageUrl = _existingImageUrl;
-  bool success = false;
-
-  try {
-    if (_selectedImageFile != null) {
-      final String fileName =
-          'opportunity_images/${DateTime.now().millisecondsSinceEpoch}_${_selectedImageFile!.name}';
-      final Reference storageRef = _storage.ref().child(fileName);
-
-      if (kIsWeb) {
-        await storageRef.putData(await _selectedImageFile!.readAsBytes());
-      } else {
-        await storageRef.putFile(File(_selectedImageFile!.path));
-      }
-      imageUrl = await storageRef.getDownloadURL();
-    }
-
-    
-
-    final eventData = {
-      'name': _nameController.text.trim(),
-      'location': _locationController.text.trim(),
-      'description': _descriptionController.text.trim(),
-      'category': _selectedCategory,
-      'date': Timestamp.fromDate(_selectedDate!),
-      'imageUrl': imageUrl,
-      'ownerId': _currentUser!.uid,
-    };
-
-    if (widget.event == null) {
-      await _firestore.collection('opportunities').add(eventData);
-    } else {
-      await _firestore
-          .collection('opportunities')
-          .doc(widget.event!.id)
-          .update(eventData);
-    }
-
-    success = true;
-
-  } catch (e) {
-    print('Error saving event: $e');
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving event: ${e.toString()}'), backgroundColor: Colors.red),
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDate ?? DateTime.now()),
       );
-    }
-  } finally {
-    if (mounted) {
-      setState(() => _isLoading = false);
-
-      if (success) {
-         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Event ${widget.event == null ? 'added' : 'updated'} successfully!'),
-              backgroundColor: Colors.green),
-        );
-        Navigator.of(context).pop();
+      if (pickedTime != null) {
+        setState(() {
+          _selectedDate = DateTime(
+            picked.year,
+            picked.month,
+            picked.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
       }
     }
   }
-}
+
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate() || _currentUser == null) {
+      return;
+    }
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a date and time.')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    bool success = false;
+
+    try {
+      // Prepare Data directly from text fields
+      final eventData = {
+        'name': _nameController.text.trim(),
+        'location': _locationController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'category': _selectedCategory,
+        'date': Timestamp.fromDate(_selectedDate!),
+        'imageUrl': _imageUrlController.text.trim(), // Get URL from controller
+        'ownerId': _currentUser!.uid,
+      };
+
+      if (widget.event == null) {
+        await _firestore.collection('opportunities').add(eventData);
+      } else {
+        await _firestore
+            .collection('opportunities')
+            .doc(widget.event!.id)
+            .update(eventData);
+      }
+      success = true;
+
+    } catch (e) {
+      print('Error saving event: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error saving event: ${e.toString()}'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'Event ${widget.event == null ? 'added' : 'updated'} successfully!'),
+                backgroundColor: Colors.green),
+          );
+          Navigator.of(context).pop();
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +160,6 @@ Future<void> _submitForm() async {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- Event Name ---
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Event Name'),
@@ -203,8 +167,6 @@ Future<void> _submitForm() async {
                     value!.isEmpty ? 'Please enter event name' : null,
               ),
               const SizedBox(height: 16),
-
-              // --- Location ---
               TextFormField(
                 controller: _locationController,
                 decoration: const InputDecoration(labelText: 'Location'),
@@ -212,20 +174,17 @@ Future<void> _submitForm() async {
                     value!.isEmpty ? 'Please enter a location' : null,
               ),
               const SizedBox(height: 16),
-
-              // --- Date & Time Picker ---
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.calendar_today),
                 title: Text(_selectedDate == null
                     ? 'Select Date & Time'
-                    : DateFormat('EEE, d MMM yyyy - hh:mm a').format(_selectedDate!)),
+                    : DateFormat('EEE, d MMM yyyy - hh:mm a')
+                        .format(_selectedDate!)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _selectDate(context),
               ),
               const SizedBox(height: 16),
-
-              // --- Category Dropdown ---
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Category'),
@@ -242,8 +201,6 @@ Future<void> _submitForm() async {
                 },
               ),
               const SizedBox(height: 16),
-
-              // --- Description ---
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
@@ -253,46 +210,23 @@ Future<void> _submitForm() async {
               ),
               const SizedBox(height: 24),
 
-              // --- Image Picker ---
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _selectedImageFile != null
-                          ? 'Image Selected: ${_selectedImageFile!.name}'
-                          : (_existingImageUrl != null
-                              ? 'Current Image Selected'
-                              : 'No Image Selected'),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  TextButton.icon(
-                    icon: const Icon(Icons.image),
-                    label: Text(_existingImageUrl != null || _selectedImageFile != null
-                            ? 'Change Image'
-                            : 'Select Image'),
-                    onPressed: _pickImage,
-                  ),
-                ],
+              // --- The changed part ---
+              TextFormField(
+                controller: _imageUrlController,
+                decoration: const InputDecoration(
+                    labelText: 'Image URL', hintText: 'https://...'),
+                keyboardType: TextInputType.url,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an image URL';
+                  }
+                  if (!value.startsWith('https://')) {
+                    return 'Please enter a valid https:// URL';
+                  }
+                  return null;
+                },
               ),
-              // --- Image Preview (Optional but nice) ---
-              if (_selectedImageFile != null || _existingImageUrl != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: _selectedImageFile != null
-                          ? (kIsWeb
-                              ? Image.network(_selectedImageFile!.path, height: 150)
-                              : Image.file(File(_selectedImageFile!.path), height: 150))
-                          : Image.network(_existingImageUrl!, height: 150),
-                    ),
-                  ),
-                ),
               const SizedBox(height: 32),
-
-              // --- Submit Button ---
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitForm,
                 style: ElevatedButton.styleFrom(

@@ -268,7 +268,7 @@ class VolunteerService {
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists) {
         return VolunteerProfile.fromSnapshot(
-            doc as DocumentSnapshot<Map<String, dynamic>>);
+            doc);
       }
       return null;
     } catch (e) {

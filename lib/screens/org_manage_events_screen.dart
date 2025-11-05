@@ -24,7 +24,7 @@ class _OrgManageEventsScreenState extends State<OrgManageEventsScreen> {
     }
     return _firestore
         .collection('opportunities')
-        .where('ownerId', isEqualTo: _currentUser!.uid)
+        .where('ownerId', isEqualTo: _currentUser.uid)
         .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) {

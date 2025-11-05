@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import '../models/volunteer_opportunity.dart';
 
 class VolunteerOpportunity {
   final String id;
